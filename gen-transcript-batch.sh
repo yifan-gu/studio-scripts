@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Usage: gen-transcript.sh [language]
+# Usage: gen-transcript.sh [language] [model]
 
 PATH_TO_WHISPER="${PATH_TO_WHISPER:-${HOME}/github.com/ggerganov/whisper.cpp}"
 LANG=${1:-chinese}
