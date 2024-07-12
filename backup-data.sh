@@ -24,15 +24,15 @@ DATE="$2"
 case "${DEVICE_NAME}" in
     "tangerine" | "ultramarine" | "vanilla" )
         mkdir -p "${FX3_DIR}/${DATE}/fx3-${DEVICE_NAME}"
-        rsync --info=progress2 -avrh  "${VIDEO_DATA_PATH}"/* "${FX3_DIR}/${DATE}/fx3-${DEVICE_NAME}/"
+        rsync --info=progress2 -avrhb  "${VIDEO_DATA_PATH}"/* "${FX3_DIR}/${DATE}/fx3-${DEVICE_NAME}/"
         ;;
     "amber" | "emerald" | "ivory" | "lavender")
         mkdir -p "${TENTACLE_DIR}/${DATE}/tentacle-${DEVICE_NAME}"
-        rsync --info=progress2 -avrh  "${AUDIO_DATA_PATH}"/* "${TENTACLE_DIR}/${DATE}/tentacle-${DEVICE_NAME}/"
+        rsync --info=progress2 -avrhb  "${AUDIO_DATA_PATH}"/* "${TENTACLE_DIR}/${DATE}/tentacle-${DEVICE_NAME}/"
         ;;
     "ax53")
         mkdir -p "${AX53_DIR}/${DATE}"
-        rsync --info=progress2 -avrh  "${VIDEO_DATA_PATH}"/* "${AX53_DIR}/${DATE}/"
+        rsync --info=progress2 -avrhb  "${VIDEO_DATA_PATH}"/* "${AX53_DIR}/${DATE}/"
         ;;
     *)
         echo "Wrong name given"
