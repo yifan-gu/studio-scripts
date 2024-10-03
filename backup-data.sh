@@ -2,9 +2,9 @@
 
 set -e
 
-FX3_DIR="/Volumes/Archive-ZFS-8-Bay/Archive-2023/Raw Videos/fx3"
-AX53_DIR="/Volumes/Archive-ZFS-8-Bay/Archive-2023/Raw Videos/ax53"
-TENTACLE_DIR="/Volumes/Archive-ZFS-8-Bay/Archive-2023/Raw Videos/tentacle track e"
+FX3_DIR="/Volumes/Archive-ZFS-8-Bay/Archive-2024-Oct/Raw Videos/fx3"
+AX53_DIR="/Volumes/Archive-ZFS-8-Bay/Archive-2024-Oct/Raw Videos/ax53"
+TENTACLE_DIR="/Volumes/Archive-ZFS-8-Bay/Archive-2024-Oct/Raw Videos/tentacle track e"
 
 VIDEO_DATA_PATH="/Volumes/Untitled/PRIVATE/M4ROOT/CLIP"
 AUDIO_DATA_PATH="/Volumes/NO NAME"
