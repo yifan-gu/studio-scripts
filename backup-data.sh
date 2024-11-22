@@ -1,6 +1,7 @@
 #!/usr/bin/env sh
 
 set -e
+set -o pipefail  # Exit if any command in a pipeline fails
 
 FX3_DIR="/Volumes/Archive-ZFS-8-Bay/Archive-2024-Oct/Raw Videos/fx3"
 AX53_DIR="/Volumes/Archive-ZFS-8-Bay/Archive-2024-Oct/Raw Videos/ax53"
@@ -19,13 +20,14 @@ DEVICE_NAME="$1"
 DATE="$2"
 
 #sudo zpool import -a
-
 #set -o xtrace
 
 case "${DEVICE_NAME}" in
     "tangerine" | "ultramarine" | "vanilla" )
         mkdir -p "${FX3_DIR}/${DATE}/fx3-${DEVICE_NAME}"
         rsync --info=progress2 -avrhb  "${VIDEO_DATA_PATH}"/* "${FX3_DIR}/${DATE}/fx3-${DEVICE_NAME}/"
+        echo "Checking for video rotation..."
+        fix-rotation.sh -r "${FX3_DIR}/${DATE}/fx3-${DEVICE_NAME}"
         ;;
     "amber" | "emerald" | "ivory" | "lavender")
         mkdir -p "${TENTACLE_DIR}/${DATE}/tentacle-${DEVICE_NAME}"

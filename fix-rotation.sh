@@ -1,18 +1,20 @@
 #!/usr/bin/env sh
 
 set -e
+set -o pipefail  # Exit if any command in a pipeline fails
 
-# Ensure arguments are not more than 2
+
+# Ensure arguments are valid
 if [ $# -lt 1 ] || [ $# -gt 3 ]; then
-    echo "Usage: $0 [-r] [-q] <TARGET>"
+    echo "Usage: $0 [-r] [-v] <TARGET>"
     echo "<TARGET> can be a file or a directory. If it's a directory, all files will be checked."
     echo "-r: Rotate recursively (applies only to directories)."
-    echo "-q: Quiet mode. Suppress output for skipped files."
+    echo "-v: Verbose mode. Print output for skipped files and detailed exiftool logs."
     exit 1
 fi
 
 RECURSIVE=false
-QUIET=false
+QUIET=true  # Default to quiet mode
 
 # Parse options
 while [ "$1" ]; do
@@ -21,8 +23,8 @@ while [ "$1" ]; do
             RECURSIVE=true
             shift
             ;;
-        -q)
-            QUIET=true
+        -v)
+            QUIET=false  # Enable verbose mode
             shift
             ;;
         *)
@@ -44,9 +46,14 @@ is_mp4_file() {
 rotate_file() {
     local file="$1"
     if is_mp4_file "$file"; then
-        rotation=$(exiftool -rotation "$file" | awk -F " " '{print $3}')
+        rotation=$(exiftool -rotation "$file" | awk -F " " '{print $3}' 2>/dev/null)
         if [ "$rotation" -ne 0 ]; then
-            exiftool -rotation=0 "$file"
+            echo "Rotating $file..."
+            if [ "$QUIET" = true ]; then
+                exiftool -rotation=0 "$file" >/dev/null 2>&1
+            else
+                exiftool -rotation=0 "$file"
+            fi
             trash "${file}_original"
             echo "$file rotated. Original file moved to trash."
         else
