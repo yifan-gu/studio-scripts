@@ -5,6 +5,7 @@ set -e
 FX3_DIR="/Volumes/Archive-ZFS-8-Bay/Archive-2024-Oct/Raw Videos/fx3"
 AX53_DIR="/Volumes/Archive-ZFS-8-Bay/Archive-2024-Oct/Raw Videos/ax53"
 TENTACLE_DIR="/Volumes/Archive-ZFS-8-Bay/Archive-2024-Oct/Raw Videos/tentacle track e"
+LARKMAX_DIR="/Volumes/Archive-ZFS-8-Bay/Archive-2024-Oct/Raw Videos/lark max"
 
 VIDEO_DATA_PATH="/Volumes/Untitled/PRIVATE/M4ROOT/CLIP"
 AUDIO_DATA_PATH="/Volumes/NO NAME"
@@ -33,6 +34,14 @@ case "${DEVICE_NAME}" in
     "ax53")
         mkdir -p "${AX53_DIR}/${DATE}"
         rsync --info=progress2 -avrhb  "${VIDEO_DATA_PATH}"/* "${AX53_DIR}/${DATE}/"
+        ;;
+    "lark1")
+        mkdir -p "${LARKMAX_DIR}/MIC 1"
+        rsync --info=progress2 -avrhb  "${AUDIO_DATA_PATH}"/* "${LARKMAX_DIR}/MIC 1/"
+        ;;
+    "lark2")
+        mkdir -p "${LARKMAX_DIR}/MIC 2"
+        rsync --info=progress2 -avrhb  "${AUDIO_DATA_PATH}"/* "${LARKMAX_DIR}/MIC 2/"
         ;;
     *)
         echo "Wrong name given"
