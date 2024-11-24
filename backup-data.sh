@@ -3,50 +3,65 @@
 set -e
 set -o pipefail  # Exit if any command in a pipeline fails
 
-FX3_DIR="/Volumes/Archive-ZFS-8-Bay/Archive-2024-Oct/Raw Videos/fx3"
-AX53_DIR="/Volumes/Archive-ZFS-8-Bay/Archive-2024-Oct/Raw Videos/ax53"
-TENTACLE_DIR="/Volumes/Archive-ZFS-8-Bay/Archive-2024-Oct/Raw Videos/tentacle track e"
-LARKMAX_DIR="/Volumes/Archive-ZFS-8-Bay/Archive-2024-Oct/Raw Videos/lark max"
+ARCHIVE_DIR="/Volumes/Archive-ZFS-8-Bay/Archive-2024-Oct"
+BACKUP_ARCHIVE_DIR="/Volumes/Backup-Archive-ZFS-6-Bay-2024-Oct/Archive-2024-Oct"
+FX3_DIR="${ARCHIVE_DIR}/Raw Videos/fx3"
+AX53_DIR="${ARCHIVE_DIR}/Raw Videos/ax53"
+TENTACLE_DIR="${ARCHIVE_DIR}/Raw Videos/tentacle track e"
+LARKMAX_DIR="${ARCHIVE_DIR}/Raw Videos/lark max"
 
 VIDEO_DATA_PATH="/Volumes/Untitled/PRIVATE/M4ROOT/CLIP"
 AUDIO_DATA_PATH="/Volumes/NO NAME"
 
-if [ $# -ne 2 ]; then
-    echo "usage: $0 DEVICE_NAME DATE"
+if [ $# -lt 2 ]; then
+    echo "usage: $0 DEVICE_NAME DATE [SUMMARY]"
     exit 1
 fi
 
 DEVICE_NAME="$1"
 DATE="$2"
+shift 2
+SUMMARY="$*"  # Capture the remaining arguments as the summary
 
-#sudo zpool import -a
-#set -o xtrace
+# Combine DATE and SUMMARY into a single folder name
+if [ -n "${SUMMARY}" ]; then
+    COMBINED_NAME="${DATE} ${SUMMARY}"
+else
+    COMBINED_NAME="${DATE}"
+fi
 
 case "${DEVICE_NAME}" in
     "tangerine" | "ultramarine" | "vanilla" )
-        mkdir -p "${FX3_DIR}/${DATE}/fx3-${DEVICE_NAME}"
-        rsync --info=progress2 -avrhb  "${VIDEO_DATA_PATH}"/* "${FX3_DIR}/${DATE}/fx3-${DEVICE_NAME}/"
+        TARGET_DIR="${FX3_DIR}/${COMBINED_NAME}/fx3-${DEVICE_NAME}"
+        mkdir -p "${TARGET_DIR}"
+        rsync --info=progress2 -avrhb "${VIDEO_DATA_PATH}"/* "${TARGET_DIR}/"
         echo "Checking for video rotation..."
-        fix-rotation.sh -r "${FX3_DIR}/${DATE}/fx3-${DEVICE_NAME}"
+        fix-rotation.sh -r "${TARGET_DIR}"
         ;;
     "amber" | "emerald" | "ivory" | "lavender")
-        mkdir -p "${TENTACLE_DIR}/${DATE}/tentacle-${DEVICE_NAME}"
-        rsync --info=progress2 -avrhb  "${AUDIO_DATA_PATH}"/* "${TENTACLE_DIR}/${DATE}/tentacle-${DEVICE_NAME}/"
+        TARGET_DIR="${TENTACLE_DIR}/${COMBINED_NAME}/tentacle-${DEVICE_NAME}"
+        mkdir -p "${TARGET_DIR}"
+        rsync --info=progress2 -avrhb "${AUDIO_DATA_PATH}"/* "${TARGET_DIR}/"
         ;;
     "ax53")
-        mkdir -p "${AX53_DIR}/${DATE}"
-        rsync --info=progress2 -avrhb  "${VIDEO_DATA_PATH}"/* "${AX53_DIR}/${DATE}/"
+        TARGET_DIR="${AX53_DIR}/${COMBINED_NAME}/ax53-${DEVICE_NAME}"
+        mkdir -p "${TARGET_DIR}"
+        rsync --info=progress2 -avrhb "${VIDEO_DATA_PATH}"/* "${TARGET_DIR}/"
         ;;
     "lark1")
-        mkdir -p "${LARKMAX_DIR}/MIC 1"
-        rsync --info=progress2 -avrhb  "${AUDIO_DATA_PATH}"/* "${LARKMAX_DIR}/MIC 1/"
+        TARGET_DIR="${LARKMAX_DIR}/${COMBINED_NAME}/MIC 1"
+        mkdir -p "${TARGET_DIR}"
+        rsync --info=progress2 -avrhb "${AUDIO_DATA_PATH}"/* "${TARGET_DIR}/"
         ;;
     "lark2")
-        mkdir -p "${LARKMAX_DIR}/MIC 2"
-        rsync --info=progress2 -avrhb  "${AUDIO_DATA_PATH}"/* "${LARKMAX_DIR}/MIC 2/"
+        TARGET_DIR="${LARKMAX_DIR}/${COMBINED_NAME}/MIC 2"
+        mkdir -p "${TARGET_DIR}"
+        rsync --info=progress2 -avrhb "${AUDIO_DATA_PATH}"/* "${TARGET_DIR}/"
         ;;
     *)
         echo "Wrong name given"
         exit 1
         ;;
 esac
+
+reorg-script.sh
