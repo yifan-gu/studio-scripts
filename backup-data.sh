@@ -44,7 +44,7 @@ case "${DEVICE_NAME}" in
         rsync --info=progress2 -avrhb "${AUDIO_DATA_PATH}"/* "${TARGET_DIR}/"
         ;;
     "ax53")
-        TARGET_DIR="${AX53_DIR}/${COMBINED_NAME}/ax53-${DEVICE_NAME}"
+        TARGET_DIR="${AX53_DIR}/${COMBINED_NAME}"
         mkdir -p "${TARGET_DIR}"
         rsync --info=progress2 -avrhb "${VIDEO_DATA_PATH}"/* "${TARGET_DIR}/"
         ;;
