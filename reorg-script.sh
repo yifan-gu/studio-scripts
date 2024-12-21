@@ -5,6 +5,8 @@ AX53_DIR="/Volumes/Archive-ZFS-8-Bay/Archive-2024-Oct/Raw Videos/ax53"
 TENTACLE_DIR="/Volumes/Archive-ZFS-8-Bay/Archive-2024-Oct/Raw Videos/tentacle track e"
 LARK_MAX_DIR="/Volumes/Archive-ZFS-8-Bay/Archive-2024-Oct/Raw Videos/lark max"
 
+echo "=== Running reorg-script.sh ==="
+
 echo "Sync ${TENTACLE_DIR}"
 
 for dir in $(ls "${TENTACLE_DIR}"); do
