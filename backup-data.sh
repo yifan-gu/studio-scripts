@@ -18,6 +18,8 @@ if [ $# -lt 2 ]; then
     exit 1
 fi
 
+echo "=== Running Backup-data.sh ==="
+
 DEVICE_NAME="$1"
 DATE="$2"
 shift 2
@@ -65,3 +67,6 @@ case "${DEVICE_NAME}" in
 esac
 
 reorg-script.sh
+
+echo
+echo "!!! Please run rsync to backup the whole drive !!!"
