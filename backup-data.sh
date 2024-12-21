@@ -25,12 +25,13 @@ DATE="$2"
 shift 2
 SUMMARY="$*"  # Capture the remaining arguments as the summary
 
-# Combine DATE and SUMMARY into a single folder name
-if [ -n "${SUMMARY}" ]; then
+# Combine DATE and SUMMARY into a single folder if [[ "${DEVICE_NAME}" == "amber" || "${DEVICE_NAME}" == "emerald" || "${DEVICE_NAME}" == "ivory" || "${DEVICE_NAME}" == "lavender" ]]; then
+if [ -n "${SUMMARY}" ] && ([[ "${DEVICE_NAME}" == "tangerine" || "${DEVICE_NAME}" == "ultramarine" || "${DEVICE_NAME}" == "vanilla" ]]); then
     COMBINED_NAME="${DATE} ${SUMMARY}"
 else
     COMBINED_NAME="${DATE}"
 fi
+
 
 case "${DEVICE_NAME}" in
     "tangerine" | "ultramarine" | "vanilla" )
