@@ -14,7 +14,7 @@ for dir in $(ls "${TENTACLE_DIR}"); do
     target_dir=$(find . -type d -name "${dir}*")
     if [ -d "${target_dir}" ] && [ ! -d "${FX3_DIR}/${target_dir}/tentacle sync" ]; then
         echo "Creating symlink for ${target_dir}"
-        ln -s "${TENTACLE_DIR}/${dir}" "${FX3_DIR}/${target_dir}/tentacle sync"
+        ln -s "../../tentacle track e/${dir}" "${FX3_DIR}/${target_dir}/tentacle sync"
     fi
 done
 
@@ -25,7 +25,7 @@ for dir in $(ls "${AX53_DIR}"); do
     target_dir=$(find . -type d -name "${dir}*")
     if [ -d "${target_dir}" ] && [ ! -d "${FX3_DIR}/${target_dir}/ax53" ]; then
         echo "Creating symlink for ${target_dir}"
-        ln -s "${AX53_DIR}/${dir}" "${FX3_DIR}/${target_dir}/ax53"
+        ln -s "../../ax53/${dir}" "${FX3_DIR}/${target_dir}/ax53"
     fi
 done
 
@@ -41,7 +41,7 @@ for mic in "MIC 1" "MIC 2"; do
         target_dir=$(find . -type d -name "${dir}*")
         if [ -d "${target_dir}" ] && [ ! -d "${FX3_DIR}/${target_dir}/lark max ${mic}" ]; then
             echo "Creating symlink for ${target_dir}/lark max/${mic}"
-            ln -s "${LARK_MAX_DIR}/${mic}/${lark_dir}" "${FX3_DIR}/${target_dir}/lark max ${mic}"
+            ln -s "../../lark max/${mic}/${lark_dir}" "${FX3_DIR}/${target_dir}/lark max ${mic}"
         fi
     done
 done
