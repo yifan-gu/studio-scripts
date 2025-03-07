@@ -39,9 +39,9 @@ for mic in "MIC 1" "MIC 2"; do
         dir="${dir_year}${dir_month}${dir_day}"
         cd "${FX3_DIR}"
         target_dir=$(find . -type d -name "${dir}*")
-        if [ -d "${target_dir}" ] && [ ! -d "${FX3_DIR}/${target_dir}/lark max ${mic}" ]; then
+        if [ -d "${target_dir}" ] && [ ! -d "${FX3_DIR}/${target_dir}/lark max/${mic}" ]; then
             echo "Creating symlink for ${target_dir}/lark max/${mic}"
-            ln -s "../../lark max/${mic}/${lark_dir}" "${FX3_DIR}/${target_dir}/lark max ${mic}"
+            ln -s "../../lark max/${mic}/${lark_dir}" "${FX3_DIR}/${target_dir}/lark max/${mic}"
         fi
     done
 done
