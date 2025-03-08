@@ -31,17 +31,11 @@ done
 
 echo "Sync ${LARK_MAX_DIR}"
 
-for mic in "MIC 1" "MIC 2"; do
-    for lark_dir in $(ls "${LARK_MAX_DIR}/${mic}"); do
-        dir_year=$(echo ${lark_dir} | awk -F "-" {'print $2'})
-        dir_month=$(echo ${lark_dir} | awk -F "-" {'print $3'})
-        dir_day=$(echo ${lark_dir} | awk -F "-" {'print $4'})
-        dir="${dir_year}${dir_month}${dir_day}"
-        cd "${FX3_DIR}"
-        target_dir=$(find . -type d -name "${dir}*")
-        if [ -d "${target_dir}" ] && [ ! -d "${FX3_DIR}/${target_dir}/lark max/${mic}" ]; then
-            echo "Creating symlink for ${target_dir}/lark max/${mic}"
-            ln -s "../../lark max/${mic}/${lark_dir}" "${FX3_DIR}/${target_dir}/lark max/${mic}"
-        fi
-    done
+for dir in $(ls "${LARK_MAX_DIR}"); do
+    cd "${FX3_DIR}"
+    target_dir=$(find . -type d -name "${dir}*")
+    if [ -d "${target_dir}" ] && [ ! -d "${FX3_DIR}/${target_dir}/lark max" ]; then
+        echo "Creating symlink for ${target_dir}"
+        ln -s "../../lark max/${dir}" "${FX3_DIR}/${target_dir}/lark max"
+    fi
 done
