@@ -9,9 +9,11 @@ FX3_DIR="${ARCHIVE_DIR}/Raw Videos/fx3"
 AX53_DIR="${ARCHIVE_DIR}/Raw Videos/ax53"
 TENTACLE_DIR="${ARCHIVE_DIR}/Raw Videos/tentacle track e"
 LARKMAX_DIR="${ARCHIVE_DIR}/Raw Videos/lark max"
+GOPRO_DIR="${ARCHIVE_DIR}/Raw Videos/gopro"
 
 VIDEO_DATA_PATH="/Volumes/Untitled/PRIVATE/M4ROOT/CLIP"
 AUDIO_DATA_PATH="/Volumes/NO NAME"
+GOPRO_DATA_PATH="/Volumes/Untitled/DCIM/100GOPRO"
 
 if [ $# -lt 2 ]; then
     echo "usage: $0 DEVICE_NAME DATE [SUMMARY]"
@@ -58,6 +60,11 @@ case "${DEVICE_NAME}" in
         TARGET_DIR="${LARKMAX_DIR}/${COMBINED_NAME}/${MIC_FOLDER}"
         mkdir -p "${TARGET_DIR}"
         rsync --info=progress2 -avrhb "${AUDIO_DATA_PATH}"/* "${TARGET_DIR}/"
+        ;;
+     gopro-*)
+        TARGET_DIR="${GOPRO_DIR}/${COMBINED_NAME}/${DEVICE_NAME}"
+        mkdir -p "${TARGET_DIR}"
+        rsync --info=progress2 -avrhb "${GOPRO_DATA_PATH}"/* "${TARGET_DIR}/"
         ;;
     *)
         echo "Wrong name given"

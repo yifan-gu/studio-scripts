@@ -4,6 +4,7 @@ FX3_DIR="/Volumes/Archive-ZFS-8-Bay/Archive-2024-Oct/Raw Videos/fx3"
 AX53_DIR="/Volumes/Archive-ZFS-8-Bay/Archive-2024-Oct/Raw Videos/ax53"
 TENTACLE_DIR="/Volumes/Archive-ZFS-8-Bay/Archive-2024-Oct/Raw Videos/tentacle track e"
 LARK_MAX_DIR="/Volumes/Archive-ZFS-8-Bay/Archive-2024-Oct/Raw Videos/lark max"
+GOPRO_DIR="/Volumes/Archive-ZFS-8-Bay/Archive-2024-Oct/Raw Videos/gopro"
 
 echo "=== Running reorg-script.sh ==="
 
@@ -37,5 +38,16 @@ for dir in $(ls "${LARK_MAX_DIR}"); do
     if [ -d "${target_dir}" ] && [ ! -d "${FX3_DIR}/${target_dir}/lark max" ]; then
         echo "Creating symlink for ${target_dir}"
         ln -s "../../lark max/${dir}" "${FX3_DIR}/${target_dir}/lark max"
+    fi
+done
+
+echo "Sync ${GOPRO_DIR}"
+
+for dir in $(ls "${GOPRO_DIR}"); do
+    cd "${FX3_DIR}"
+    target_dir=$(find . -type d -name "${dir}*")
+    if [ -d "${target_dir}" ] && [ ! -d "${FX3_DIR}/${target_dir}/gopro" ]; then
+        echo "Creating symlink for ${target_dir}"
+        ln -s "../../gopro/${dir}" "${FX3_DIR}/${target_dir}/gopro"
     fi
 done
