@@ -1,5 +1,6 @@
 local scrollTimer = nil
-local scrollSpeed = 1  -- change this to control speed
+local scrollSpeed = 1
+local scrollInterval = 0.1  -- tighter interval = smoother
 
 -- Scroll Up
 hs.hotkey.bind({"ctrl", "alt"}, "W", function()
@@ -9,7 +10,7 @@ hs.hotkey.bind({"ctrl", "alt"}, "W", function()
     function()
       hs.eventtap.scrollWheel({0, scrollSpeed}, {}, "pixel")
     end,
-    0.01
+    scrollInterval
   )
 end)
 
@@ -21,7 +22,7 @@ hs.hotkey.bind({"ctrl", "alt"}, "S", function()
     function()
       hs.eventtap.scrollWheel({0, -scrollSpeed}, {}, "pixel")
     end,
-    0.01
+    scrollInterval
   )
 end)
 
