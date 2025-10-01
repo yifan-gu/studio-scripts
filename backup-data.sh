@@ -5,6 +5,7 @@ set -o pipefail  # Exit if any command in a pipeline fails
 
 ARCHIVE_DIR="/Volumes/Archive-ZFS-8-Bay/Archive-2024-Oct"
 BACKUP_ARCHIVE_DIR="/Volumes/Backup-Archive-ZFS-6-Bay-2024-Oct/Archive-2024-Oct"
+TOP_DIR="${ARCHIVE_DIR}/Raw Videos/organized"
 FX3_DIR="${ARCHIVE_DIR}/Raw Videos/fx3"
 AX53_DIR="${ARCHIVE_DIR}/Raw Videos/ax53"
 TENTACLE_DIR="${ARCHIVE_DIR}/Raw Videos/tentacle track e"
@@ -27,13 +28,10 @@ DATE="$2"
 shift 2
 SUMMARY="$*"  # Capture the remaining arguments as the summary
 
-# Combine DATE and SUMMARY into a single folder if [[ "${DEVICE_NAME}" == "amber" || "${DEVICE_NAME}" == "emerald" || "${DEVICE_NAME}" == "ivory" || "${DEVICE_NAME}" == "lavender" ]]; then
-if [ -n "${SUMMARY}" ] && ([[ "${DEVICE_NAME}" == "tangerine" || "${DEVICE_NAME}" == "ultramarine" || "${DEVICE_NAME}" == "vanilla" ]]); then
-    COMBINED_NAME="${DATE} ${SUMMARY}"
-else
-    COMBINED_NAME="${DATE}"
-fi
+FULL_NAME="${DATE} ${SUMMARY}"
+COMBINED_NAME="${DATE}"
 
+mkdir -p "${TOP_DIR}/${FULL_NAME}"
 
 case "${DEVICE_NAME}" in
     "tangerine" | "ultramarine" | "vanilla" )
@@ -49,15 +47,14 @@ case "${DEVICE_NAME}" in
         rsync --info=progress2 -avrhb "${AUDIO_DATA_PATH}"/* "${TARGET_DIR}/"
         ;;
     "ax53")
-        TARGET_DIR="${AX53_DIR}/${COMBINED_NAME}"
+        TARGET_DIR="${AX53_DIR}/${COMBINED_NAME}/ax53-blk"
         mkdir -p "${TARGET_DIR}"
         rsync --info=progress2 -avrhb "${VIDEO_DATA_PATH}"/* "${TARGET_DIR}/"
         ;;
      lark*)
         # Extract the numeric part from DEVICE_NAME (e.g., lark1 -> 1, lark2 -> 2, etc.)
         num="${DEVICE_NAME#lark}"
-        MIC_FOLDER="MIC ${num}"
-        TARGET_DIR="${LARKMAX_DIR}/${COMBINED_NAME}/${MIC_FOLDER}"
+        TARGET_DIR="${LARKMAX_DIR}/${COMBINED_NAME}/lark-${num}"
         mkdir -p "${TARGET_DIR}"
         rsync --info=progress2 -avrhb "${AUDIO_DATA_PATH}"/* "${TARGET_DIR}/"
         ;;
