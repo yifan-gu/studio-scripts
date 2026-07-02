@@ -1,21 +1,24 @@
 #!/usr/bin/env sh
 set -eu
 
-TOP_DIR="/Volumes/Archive-ZFS-8-Bay-2019-2026/Archive-2024-Oct/Raw Videos/organized"
+ARCHIVE_DIR="/Volumes/Archive-ZFS-8-Bay-2026/Archive-2026-Mar"
+TOP_DIR="${ARCHIVE_DIR}/Raw Videos/organized"
 
-FX3_DIR="/Volumes/Archive-ZFS-8-Bay-2019-2026/Archive-2024-Oct/Raw Videos/fx3"
-AX53_DIR="/Volumes/Archive-ZFS-8-Bay-2019-2026/Archive-2024-Oct/Raw Videos/ax53"
-TENTACLE_DIR="/Volumes/Archive-ZFS-8-Bay-2019-2026/Archive-2024-Oct/Raw Videos/tentacle track e"
-LARK_MAX_DIR="/Volumes/Archive-ZFS-8-Bay-2019-2026/Archive-2024-Oct/Raw Videos/lark max"
-GOPRO_DIR="/Volumes/Archive-ZFS-8-Bay-2019-2026/Archive-2024-Oct/Raw Videos/gopro"
+FX3_DIR="${ARCHIVE_DIR}/Raw Videos/fx3"
+AX53_DIR="${ARCHIVE_DIR}/Raw Videos/ax53"
+TENTACLE_DIR="${ARCHIVE_DIR}/Raw Videos/tentacle track e"
+LARK_MAX_DIR="${ARCHIVE_DIR}/Raw Videos/lark max"
+GOPRO_DIR="${ARCHIVE_DIR}/Raw Videos/gopro"
+SONY_TRV_DIR="${ARCHIVE_DIR}/Raw Videos/sony trv"
 
-# label is only used for logging; link names come from subfolder names (fx3-tangerine, etc.)
+# label only for logging; devroot is absolute scan root; devrel is sibling folder name under Raw Videos
 DEVICE_DIRS="
-FX3:$FX3_DIR
-AX53:$AX53_DIR
-TENTACLE:$TENTACLE_DIR
-LARK_MAX:$LARK_MAX_DIR
-GOPRO:$GOPRO_DIR
+FX3:$FX3_DIR:fx3
+AX53:$AX53_DIR:ax53
+TENTACLE:$TENTACLE_DIR:tentacle track e
+LARK_MAX:$LARK_MAX_DIR:lark max
+GOPRO:$GOPRO_DIR:gopro
+TRV:$SONY_TRV_DIR:sony trv
 "
 
 DRY_RUN="${DRY_RUN:-0}"
@@ -29,39 +32,34 @@ for org in "$TOP_DIR"/*; do
   key=${base%% *}          # first word before first space
   [ -n "$key" ] || continue
 
-  echo "$DEVICE_DIRS" | while IFS=: read -r label devroot; do
+  echo "$DEVICE_DIRS" | while IFS=: read -r label devroot devrel; do
     [ -n "$devroot" ] || continue
+    [ -n "$devrel" ] || continue
 
     daydir="$devroot/$key"
     [ -d "$daydir" ] || continue
 
-    # Iterate subfolders under device daydir
-    found_any=0
     for sub in "$daydir"/*; do
       [ -d "$sub" ] || continue
-      found_any=1
 
       subname=$(basename "$sub")
       link="$org/$subname"
 
       # If link already exists, skip
       if [ -L "$link" ] || [ -e "$link" ]; then
-        #log "EXISTS: $link"
         continue
       fi
 
+      # Make the link target relative to "$org" (organized/<orgname>/)
+      # sibling folders live at ../../<devrel>/<key>/<subname>
+      rel="../../$devrel/$key/$subname"
+
       if [ "$DRY_RUN" = "1" ]; then
-        log "LINK: $link -> $sub"
+        log "LINK: $link -> $rel"
       else
-        ln -s "$sub" "$link"
-        log "LINKED: $link -> $sub"
+        ln -s "$rel" "$link"
+        log "LINKED: $link -> $rel"
       fi
     done
-
-    # If you also want a link to the day folder itself when it has no subfolders:
-    # if [ "$found_any" = "0" ]; then
-    #   link="$org/${label,,}"
-    #   [ -e "$link" ] || ln -s "$daydir" "$link"
-    # fi
   done
 done

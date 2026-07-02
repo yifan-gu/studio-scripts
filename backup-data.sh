@@ -3,18 +3,24 @@
 set -e
 set -o pipefail  # Exit if any command in a pipeline fails
 
-ARCHIVE_DIR="/Volumes/Archive-ZFS-8-Bay-2019-2026/Archive-2024-Oct"
-BACKUP_ARCHIVE_DIR="/Volumes/Backup-Archive-ZFS-6-Bay-2024-Oct/Archive-2024-Oct"
+ARCHIVE_DIR="/Volumes/Archive-ZFS-8-Bay-2026/Archive-2026-Mar"
+BACKUP_ARCHIVE_DIR="/Volumes/Backup-Archive-ZFS-6-Bay-2024-Oct/Archive-2026-Mar"
 TOP_DIR="${ARCHIVE_DIR}/Raw Videos/organized"
 FX3_DIR="${ARCHIVE_DIR}/Raw Videos/fx3"
 AX53_DIR="${ARCHIVE_DIR}/Raw Videos/ax53"
 TENTACLE_DIR="${ARCHIVE_DIR}/Raw Videos/tentacle track e"
 LARKMAX_DIR="${ARCHIVE_DIR}/Raw Videos/lark max"
 GOPRO_DIR="${ARCHIVE_DIR}/Raw Videos/gopro"
+SONY_TRV_DIR="${ARCHIVE_DIR}/Raw Videos/sony trv"
 
 VIDEO_DATA_PATH="/Volumes/Untitled/PRIVATE/M4ROOT/CLIP"
 AUDIO_DATA_PATH="/Volumes/NO NAME"
 GOPRO_DATA_PATH="/Volumes/Untitled/DCIM/100GOPRO"
+TRV_DATA_PATH="/Volumes/VIDEO/VIDEO/HVR"
+
+TEMP_DIR="/tmp/trv-import"
+TEMP_MOV_DIR="${TEMP_DIR}/mov"
+
 
 if [ $# -lt 2 ]; then
     echo "usage: $0 DEVICE_NAME DATE [SUMMARY]"
@@ -62,6 +68,28 @@ case "${DEVICE_NAME}" in
         TARGET_DIR="${GOPRO_DIR}/${COMBINED_NAME}/${DEVICE_NAME}"
         mkdir -p "${TARGET_DIR}"
         rsync --info=progress2 -avrhb "${GOPRO_DATA_PATH}"/* "${TARGET_DIR}/"
+        ;;
+     trv-*)
+        TARGET_DIR="${SONY_TRV_DIR}/${COMBINED_NAME}/${DEVICE_NAME}"
+        mkdir -p "${TARGET_DIR}"
+        mkdir -p "${TEMP_DIR}"
+        mkdir -p "${TEMP_MOV_DIR}"
+
+        rsync --info=progress2 -avrhb "${TRV_DATA_PATH}"/* "${TEMP_DIR}/"
+
+        for file in "${TEMP_DIR}"/*.AVI; do
+            [ -e "${file}" ] || continue
+
+            base="$(basename "${file}")"
+            name="${base%.*}"
+
+            echo "Converting: ${file}"
+            ffmpeg -y -i "${file}" -c copy "${TEMP_MOV_DIR}/${name}.mov"
+        done
+
+        rsync --info=progress2 -avrhb "${TEMP_MOV_DIR}/"*.mov "${TARGET_DIR}/"
+
+        rm -rf ${TEMP_DIR}
         ;;
     *)
         echo "Wrong name given"
