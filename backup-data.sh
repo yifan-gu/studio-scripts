@@ -57,10 +57,8 @@ case "${DEVICE_NAME}" in
         mkdir -p "${TARGET_DIR}"
         rsync --info=progress2 -avrhb "${VIDEO_DATA_PATH}"/* "${TARGET_DIR}/"
         ;;
-     lark*)
-        # Extract the numeric part from DEVICE_NAME (e.g., lark1 -> 1, lark2 -> 2, etc.)
-        num="${DEVICE_NAME#lark}"
-        TARGET_DIR="${LARKMAX_DIR}/${COMBINED_NAME}/lark-${num}"
+     lark-*)
+        TARGET_DIR="${LARKMAX_DIR}/${COMBINED_NAME}/${DEVICE_NAME}"
         mkdir -p "${TARGET_DIR}"
         rsync --info=progress2 -avrhb "${AUDIO_DATA_PATH}"/* "${TARGET_DIR}/"
         ;;
