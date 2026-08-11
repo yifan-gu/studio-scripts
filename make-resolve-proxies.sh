@@ -71,6 +71,7 @@ FAILED_FILE="$LOG_DIR/failed.txt"
 JOB_PIDS=()
 JOB_NAMES=()
 JOB_SLOTS=()
+JOB_SIZES=()
 
 STATUS_DRAWN=0
 STATUS_LINES=$((PARALLEL_JOBS + 2))
@@ -132,8 +133,10 @@ clear_status() {
 draw_status() {
   local i
 
-  printf '\033[1mPROGRESS: %s / %s (%s%%) | FAILED: %s\033[0m\n' \
-    "$finished" "$TOTAL_FILES" "$percent" "$failed"
+  printf '\033[1mPROGRESS: %s / %s (%s%%) | SIZE: %s / %s (%s%%) | FAILED: %s\033[0m\n' \
+    "$finished" "$TOTAL_FILES" "$percent" \
+    "$(human_size "$finished_bytes")" "$(human_size "$TOTAL_BYTES")" "$byte_percent" \
+    "$failed"
 
   printf '\033[1mWORKING:\033[0m\n'
 
@@ -176,11 +179,19 @@ get_free_slot() {
 }
 
 job_finished() {
+  local bytes="${1:-0}"
+
   finished=$((finished + 1))
+  finished_bytes=$((finished_bytes + bytes))
 
   percent="$(
     awk -v done="$finished" -v total="$TOTAL_FILES" \
-      'BEGIN { printf "%.1f", (done / total) * 100 }'
+      'BEGIN { if (total > 0) printf "%.1f", (done / total) * 100; else printf "100.0" }'
+  )"
+
+  byte_percent="$(
+    awk -v done="$finished_bytes" -v total="$TOTAL_BYTES" \
+      'BEGIN { if (total > 0) printf "%.1f", (done / total) * 100; else printf "100.0" }'
   )"
 }
 
@@ -188,13 +199,15 @@ reap_finished_jobs() {
   local new_pids=()
   local new_names=()
   local new_slots=()
-  local i pid name slot rc stat
+  local new_sizes=()
+  local i pid name slot size rc stat
   local reaped=0
 
   for ((i=0; i<${#JOB_PIDS[@]}; i++)); do
     pid="${JOB_PIDS[$i]}"
     name="${JOB_NAMES[$i]}"
     slot="${JOB_SLOTS[$i]}"
+    size="${JOB_SIZES[$i]}"
 
     stat="$(ps -o stat= -p "$pid" 2>/dev/null | tr -d ' ')"
 
@@ -210,7 +223,7 @@ reap_finished_jobs() {
           >> "$LOG_DIR/worker-$slot.log"
       fi
 
-      job_finished
+      job_finished "$size"
       reaped=1
       continue
     fi
@@ -218,12 +231,14 @@ reap_finished_jobs() {
     new_pids+=("$pid")
     new_names+=("$name")
     new_slots+=("$slot")
+    new_sizes+=("$size")
   done
 
   set +u
   JOB_PIDS=("${new_pids[@]}")
   JOB_NAMES=("${new_names[@]}")
   JOB_SLOTS=("${new_slots[@]}")
+  JOB_SIZES=("${new_sizes[@]}")
   set -u
 
   if [[ "$reaped" -eq 1 ]]; then
@@ -251,6 +266,9 @@ start_job() {
   slot="$(get_free_slot)"
 
   local job_log="$LOG_DIR/worker-$slot.log"
+  local src_size
+  src_size="$(file_size "$src")"
+  [[ "$src_size" =~ ^[0-9]+$ ]] || src_size=0
 
   # Add a separator for the new job.
   {
@@ -276,6 +294,7 @@ start_job() {
   JOB_PIDS+=("$pid")
   JOB_NAMES+=("$rel")
   JOB_SLOTS+=("$slot")
+  JOB_SIZES+=("$src_size")
 
   printf '[%s] QUEUED %s [%s]: %s\n' \
     "$(date '+%F %T')" "$type" "$pid" "$rel" >> "$job_log"
@@ -296,6 +315,26 @@ wait_for_all_jobs() {
 file_size() {
   # macOS stat first; GNU/Linux fallback.
   stat -f '%z' "$1" 2>/dev/null || stat -c '%s' "$1" 2>/dev/null
+}
+
+human_size() {
+  awk -v bytes="$1" '
+    BEGIN {
+      split("B KiB MiB GiB TiB PiB", unit, " ")
+      size = bytes + 0
+      i = 1
+
+      while (size >= 1024 && i < 6) {
+        size /= 1024
+        i++
+      }
+
+      if (i == 1)
+        printf "%.0f %s", size, unit[i]
+      else
+        printf "%.2f %s", size, unit[i]
+    }
+  '
 }
 
 probe_duration() {
@@ -685,8 +724,11 @@ count=0
 finished=0
 failed=0
 percent="0.0"
+finished_bytes=0
+byte_percent="0.0"
 
 TOTAL_FILES=0
+TOTAL_BYTES=0
 
 while IFS= read -r src; do
   if should_skip "$src"; then
@@ -694,6 +736,11 @@ while IFS= read -r src; do
   fi
 
   TOTAL_FILES=$((TOTAL_FILES + 1))
+
+  size="$(file_size "$src")"
+  if [[ "$size" =~ ^[0-9]+$ ]]; then
+    TOTAL_BYTES=$((TOTAL_BYTES + size))
+  fi
 done < <(
   find "$SRC_ROOT" -type f \( \
     -iname '*.mp4' -o \
@@ -712,6 +759,7 @@ done < <(
 )
 
 log "Total files: $TOTAL_FILES"
+log "Total source size: $(human_size "$TOTAL_BYTES") ($TOTAL_BYTES bytes)"
 
 draw_status
 
