@@ -80,8 +80,12 @@ PROXY_SIZE_RATIO="${PROXY_SIZE_RATIO:-33}"
 STATUS_REFRESH_SECONDS="${STATUS_REFRESH_SECONDS:-1}"
 
 # Default skip list: skip-folders.txt in the current working directory.
-SKIP_FILE="${SKIP_FILE:-${PWD}/skip-folders.txt}"
+SKIP_FILE="${SKIP_FILE:-$HOME/skip-paths.txt}"
 
+if [[ ! -f "$SKIP_FILE" ]]; then
+  echo "ERROR: skip path file does not exist: $SKIP_FILE"
+  exit 2
+fi
 
 if ! [[ "$PARALLEL_JOBS" =~ ^[1-9][0-9]*$ ]]; then
   echo "ERROR: PARALLEL_JOBS must be a positive integer."
@@ -205,7 +209,7 @@ JOB_PROGRESS_COLUMN=1
 # 1 progress line
 # 1 PROCESSING line
 # PARALLEL_JOBS active/blank lines
-STATUS_LINES=$((PARALLEL_JOBS + 2))
+STATUS_LINES=$((PARALLEL_JOBS + 3))
 
 
 interrupt_all() {
@@ -397,6 +401,7 @@ draw_status() {
     "$byte_percent" \
     "$failed"
 
+  printf '\n'
   printf '\033[1mPROCESSING:\033[0m\n'
 
   set +u
