@@ -73,8 +73,8 @@ AUDIO_BITRATE="${AUDIO_BITRATE:-128k}"
 PARALLEL_JOBS="${PARALLEL_JOBS:-6}"
 
 # Estimated source/proxy size ratio used ONLY for progress display.
-# 100 Mbps / (2700 kbps + 128kbps) is roughly 35.
-PROXY_SIZE_RATIO="${PROXY_SIZE_RATIO:-35}"
+# 100 Mbps / (2700 kbps + 128kbps) is roughly 33.
+PROXY_SIZE_RATIO="${PROXY_SIZE_RATIO:-33}"
 
 # How often the live job progress is refreshed.
 STATUS_REFRESH_SECONDS="${STATUS_REFRESH_SECONDS:-1}"
@@ -203,7 +203,7 @@ STATUS_DRAWN=0
 JOB_PROGRESS_COLUMN=1
 
 # 1 progress line
-# 1 WORKING line
+# 1 PROCESSING line
 # PARALLEL_JOBS active/blank lines
 STATUS_LINES=$((PARALLEL_JOBS + 2))
 
@@ -238,11 +238,23 @@ interrupt_all() {
 
 trap interrupt_all INT TERM
 
-# Always restore it when the script exits.
+# Always restore cursor when the script exits.
 trap 'printf "\033[?25h"' EXIT
+
+# Clear terminal screen and iTerm2 scrollback.
+if [[ -t 1 ]]; then
+  printf '\033[2J\033[H'
+  printf '\033]1337;ClearScrollback\a'
+fi
 
 # Hide terminal cursor for the duration of the script.
 printf '\033[?25l'
+
+printf '\033[1mDaVinci Resolve Proxy Generator\033[0m\n\n'
+printf 'Source: %s\n' "$SRC_ROOT"
+printf 'Proxy:  %s\n' "$PROXY_ROOT"
+printf 'Jobs:   %s parallel\n' "$PARALLEL_JOBS"
+printf '\nScanning source files and calculating total size...\n'
 
 
 clear_status() {
@@ -385,7 +397,7 @@ draw_status() {
     "$byte_percent" \
     "$failed"
 
-  printf '\033[1mWORKING:\033[0m\n'
+  printf '\033[1mPROCESSING:\033[0m\n'
 
   set +u
 
@@ -1200,6 +1212,9 @@ TOTAL_BYTES=0
 
 # First pass:
 # Count files + source bytes.
+TOTAL_FILES=0
+TOTAL_BYTES=0
+
 while IFS= read -r src; do
   if should_skip "$src"; then
     continue
@@ -1212,6 +1227,12 @@ while IFS= read -r src; do
   if [[ "$size" =~ ^[0-9]+$ ]]; then
     TOTAL_BYTES=$((TOTAL_BYTES + size))
   fi
+
+  # Update scan progress in place.
+  printf '\r\033[2KScanned: %s files | Size: %s' \
+    "$TOTAL_FILES" \
+    "$(human_size "$TOTAL_BYTES")"
+
 done < <(
   find "$SRC_ROOT" -type f \( \
     -iname '*.mp4' -o \
@@ -1229,10 +1250,18 @@ done < <(
   \)
 )
 
+# Final scan result.
+printf '\r\033[2KScanned: %s files | Size: %s\n' \
+  "$TOTAL_FILES" \
+  "$(human_size "$TOTAL_BYTES")"
+
 
 log "Total files: $TOTAL_FILES"
 log "Total source size: $(human_size "$TOTAL_BYTES") ($TOTAL_BYTES bytes)"
 
+# Replace startup/scanning message with the live status display.
+
+printf '\n'
 
 draw_status
 
