@@ -7,10 +7,9 @@
 # VIDEO:
 #   - Mirrors the source folder hierarchy.
 #   - 720p HEVC/H.265 Main10, 10-bit 4:2:0.
-#   - CRF 26, preset fast.
-#   - Embedded audio -> AAC 96 kb/s per audio stream.
+#   - Embedded audio -> AAC 128 kb/s per audio stream.
 #   - Maps ALL source streams.
-#   - Sony rtmd/data stream -> stream copy unchanged.
+#   - Sony rtmd/data stream -> timecode
 #
 # AUDIO-ONLY:
 #   - WAV/AIFF/FLAC/M4A/MP3/AAC are copied byte-for-byte.
@@ -58,7 +57,7 @@ SRC_ROOT="${1%/}"
 PROXY_ROOT="${2%/}"
 
 HEIGHT="${HEIGHT:-720}"
-AUDIO_BITRATE="${AUDIO_BITRATE:-96k}"
+AUDIO_BITRATE="${AUDIO_BITRATE:-128k}"
 PARALLEL_JOBS="${PARALLEL_JOBS:-6}"
 
 LOG_ROOT="$PROXY_ROOT/_proxy_logs"
