@@ -132,6 +132,41 @@ clear_status() {
 
 draw_status() {
   local i
+  local name_width=0
+  local size_width=0
+  local name size_text
+  local terminal_width=120
+  local max_name_width
+
+  # Use terminal width when available; fall back to 120 columns.
+  terminal_width="$(stty size < /dev/tty 2>/dev/null | awk '{print $2}')"
+  if [[ -z "$terminal_width" || ! "$terminal_width" =~ ^[0-9]+$ ]]; then
+    terminal_width="$(tput cols 2>/dev/null || printf '120')"
+  fi
+
+  # Reserve room for indentation, separator, and size column.
+  max_name_width=$((terminal_width - 18))
+  if [[ "$max_name_width" -lt 20 ]]; then
+    max_name_width=20
+  fi
+
+  # Measure active rows so filenames and sizes align cleanly.
+  for ((i=0; i<${#JOB_NAMES[@]}; i++)); do
+    name="${JOB_NAMES[$i]}"
+    size_text="$(human_size "${JOB_SIZES[$i]}")"
+
+    if [[ "${#name}" -gt "$name_width" ]]; then
+      name_width="${#name}"
+    fi
+
+    if [[ "${#size_text}" -gt "$size_width" ]]; then
+      size_width="${#size_text}"
+    fi
+  done
+
+  if [[ "$name_width" -gt "$max_name_width" ]]; then
+    name_width="$max_name_width"
+  fi
 
   printf '\033[1mPROGRESS: %s / %s (%s%%) | SIZE: %s / %s (%s%%) | FAILED: %s\033[0m\n' \
     "$finished" "$TOTAL_FILES" "$percent" \
@@ -142,7 +177,17 @@ draw_status() {
 
   for ((i=0; i<PARALLEL_JOBS; i++)); do
     if [[ "$i" -lt "${#JOB_NAMES[@]}" ]]; then
-      printf '  %s\n' "${JOB_NAMES[$i]}"
+      name="${JOB_NAMES[$i]}"
+      size_text="$(human_size "${JOB_SIZES[$i]}")"
+
+      # Truncate long paths from the left so the filename/end of path stays visible.
+      if [[ "${#name}" -gt "$name_width" ]]; then
+        name="…${name: -$((name_width - 1))}"
+      fi
+
+      printf '  %-*s  %*s\n' \
+        "$name_width" "$name" \
+        "$size_width" "$size_text"
     else
       printf '\n'
     fi
