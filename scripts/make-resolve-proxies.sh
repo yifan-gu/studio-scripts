@@ -74,6 +74,7 @@ PARALLEL_JOBS="${PARALLEL_JOBS:-6}"
 
 # Estimated source/proxy size ratio used ONLY for progress display.
 # 100 Mbps / (2700 kbps + 128kbps) is roughly 33.
+# 18 for ax53 footages as it's about 50 Mbps
 PROXY_SIZE_RATIO="${PROXY_SIZE_RATIO:-33}"
 
 # How often the live job progress is refreshed.
@@ -189,6 +190,28 @@ human_size() {
         printf "%.2f %s", size, unit[i]
     }
   '
+}
+
+
+human_duration() {
+  local seconds="${1:-0}"
+
+  if ! [[ "$seconds" =~ ^[0-9]+$ ]]; then
+    printf '%s' '--'
+    return
+  fi
+
+  local days=$((seconds / 86400))
+  local hours=$(((seconds % 86400) / 3600))
+  local minutes=$(((seconds % 3600) / 60))
+
+  if [[ "$days" -gt 0 ]]; then
+    printf '%dd %dh %dm' "$days" "$hours" "$minutes"
+  elif [[ "$hours" -gt 0 ]]; then
+    printf '%dh %dm' "$hours" "$minutes"
+  else
+    printf '%dm' "$minutes"
+  fi
 }
 
 
@@ -329,6 +352,56 @@ job_progress() {
 }
 
 
+calculate_eta() {
+  if [[ "$PROCESS_START_EPOCH" -eq 0 || "$processed_bytes" -le 0 ]]; then
+    printf '%s' '--'
+    return
+  fi
+
+  local now
+  local elapsed
+  local remaining
+  local eta_seconds
+
+  now="$(date +%s)"
+  elapsed=$((now - PROCESS_START_EPOCH))
+
+  # finished_bytes still includes verified/skipped files,
+  # so they are removed from the remaining workload.
+  remaining=$((TOTAL_BYTES - finished_bytes))
+
+  if [[ "$remaining" -le 0 ]]; then
+    printf '%s' '0m'
+    return
+  fi
+
+  if [[ "$elapsed" -le 0 ]]; then
+    printf '%s' '--'
+    return
+  fi
+
+  eta_seconds="$(
+    awk \
+      -v processed="$processed_bytes" \
+      -v elapsed="$elapsed" \
+      -v remaining="$remaining" '
+      BEGIN {
+        speed = processed / elapsed
+
+        if (speed <= 0) {
+          print 0
+          exit
+        }
+
+        printf "%.0f", remaining / speed
+      }
+    '
+  )"
+
+  human_duration "$eta_seconds"
+}
+
+
 draw_status() {
   local i
   local name_width=0
@@ -392,14 +465,15 @@ draw_status() {
 
   JOB_PROGRESS_COLUMN=$((name_width + size_width + 7))
 
-  printf '\033[1mPROGRESS: %s / %s (%s%%) | SIZE: %s / %s (%s%%) | FAILED: %s\033[0m\n' \
+  printf '\033[1mPROGRESS: %s / %s (%s%%) | SIZE: %s / %s (%s%%) | FAILED: %s | ETA: %s\033[0m\n' \
     "$finished" \
     "$TOTAL_FILES" \
     "$percent" \
     "$(human_size "$finished_bytes")" \
     "$(human_size "$TOTAL_BYTES")" \
     "$byte_percent" \
-    "$failed"
+    "$failed" \
+    "$(calculate_eta)"
 
   printf '\n'
   printf '\033[1mPROCESSING:\033[0m\n'
@@ -513,9 +587,14 @@ get_free_slot() {
 
 job_finished() {
   local bytes="${1:-0}"
+  local actually_processed="${2:-1}"
 
   finished=$((finished + 1))
   finished_bytes=$((finished_bytes + bytes))
+
+  if [[ "$actually_processed" -eq 1 ]]; then
+    processed_bytes=$((processed_bytes + bytes))
+  fi
 
   percent="$(
     awk \
@@ -586,7 +665,16 @@ reap_finished_jobs() {
       wait "$pid"
       rc=$?
 
-      if [[ "$rc" -ne 0 ]]; then
+      if [[ "$rc" -eq 10 ]]; then
+        # Existing proxy/audio was verified and skipped.
+        # Count it toward overall progress, but NOT processing speed.
+        job_finished "$size" 0
+
+      elif [[ "$rc" -eq 0 ]]; then
+        # File was actually processed during this run.
+        job_finished "$size" 1
+
+      else
         failed=$((failed + 1))
 
         printf '[%s] JOB FAILED: %s\n' \
@@ -598,9 +686,11 @@ reap_finished_jobs() {
           "$(date '+%F %T')" \
           "$name" \
           >> "$LOG_FILE"
-      fi
 
-      job_finished "$size"
+        # Preserve your existing behavior: failed files still advance
+        # overall progress, but don't count toward processing speed.
+        job_finished "$size" 0
+      fi
 
       reaped=1
       continue
@@ -648,6 +738,10 @@ start_job() {
   local rel="${src#$SRC_ROOT/}"
 
   wait_for_job_slot
+
+  if [[ "$PROCESS_START_EPOCH" -eq 0 ]]; then
+    PROCESS_START_EPOCH="$(date +%s)"
+  fi
 
   local slot
   slot="$(get_free_slot)"
@@ -1019,7 +1113,7 @@ copy_audio_file() {
 
     if [[ -n "$src_size" && "$src_size" == "$dst_size" ]]; then
       log "SKIP audio: $rel"
-      return 0
+      return 10
     fi
 
     log "RECOPY audio (size mismatch): $rel"
@@ -1081,7 +1175,7 @@ process_video_file() {
   if [[ -s "$dst" ]]; then
     if verify_proxy "$src" "$dst"; then
       log "SKIP verified: $rel"
-      return 0
+      return 10
     else
       log "REBUILD invalid existing proxy: $rel"
       rm -f "$dst"
@@ -1209,11 +1303,10 @@ failed=0
 percent="0.0"
 
 finished_bytes=0
+processed_bytes=0
 byte_percent="0.0"
 
-TOTAL_FILES=0
-TOTAL_BYTES=0
-
+PROCESS_START_EPOCH=0
 
 # First pass:
 # Count files + source bytes.
