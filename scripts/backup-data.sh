@@ -3,8 +3,8 @@
 set -e
 set -o pipefail  # Exit if any command in a pipeline fails
 
-ARCHIVE_DIR="/Volumes/Archive-ZFS-8-Bay-2026/Archive-2026-Mar"
-BACKUP_ARCHIVE_DIR="/Volumes/Backup-Archive-ZFS-6-Bay-2024-Oct/Archive-2026-Mar"
+ARCHIVE_DIR="/Volumes/Archive-ZFS-8-Bay-2026/Archive-2026-Sept"
+#BACKUP_ARCHIVE_DIR="/Volumes/Backup-Archive-ZFS-6-Bay-2024-Oct/Archive-2026-Sept"
 TOP_DIR="${ARCHIVE_DIR}/Raw Videos/organized"
 FX3_DIR="${ARCHIVE_DIR}/Raw Videos/fx3"
 AX53_DIR="${ARCHIVE_DIR}/Raw Videos/ax53"

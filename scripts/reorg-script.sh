@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -eu
 
-ARCHIVE_DIR="/Volumes/Archive-ZFS-8-Bay-2026/Archive-2026-Mar"
+ARCHIVE_DIR="/Volumes/Archive-ZFS-8-Bay-2026/Archive-2026-Sept"
 TOP_DIR="${ARCHIVE_DIR}/Raw Videos/organized"
 
 FX3_DIR="${ARCHIVE_DIR}/Raw Videos/fx3"
