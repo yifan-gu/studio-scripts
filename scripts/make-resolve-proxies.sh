@@ -882,7 +882,8 @@ probe_audio_signature() {
     -show_entries stream=sample_rate,channels \
     -of csv=p=0:s='|' \
     "$1" \
-    2>/dev/null
+    2>/dev/null |
+    awk 'NF'
 }
 
 
@@ -894,8 +895,7 @@ probe_audio_stream_count() {
     -of csv=p=0 \
     "$1" \
     2>/dev/null |
-    wc -l |
-    tr -d ' '
+    awk 'NF { n++ } END { print n+0 }'
 }
 
 
