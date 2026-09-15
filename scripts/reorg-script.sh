@@ -11,6 +11,7 @@ LARK_MAX_DIR="${ARCHIVE_DIR}/Raw Videos/lark max"
 GOPRO_DIR="${ARCHIVE_DIR}/Raw Videos/gopro"
 SONY_TRV_DIR="${ARCHIVE_DIR}/Raw Videos/sony trv"
 VOICE_RECORDINGS_DIR="${ARCHIVE_DIR}/Raw Videos/voice recordings"
+SCREEN_RECORDINGS_DIR="${ARCHIVE_DIR}/Raw Videos/screen recordings"
 
 # label only for logging; devroot is absolute scan root; devrel is sibling folder name under Raw Videos
 DEVICE_DIRS="
@@ -21,6 +22,7 @@ LARK_MAX:$LARK_MAX_DIR:lark max
 GOPRO:$GOPRO_DIR:gopro
 TRV:$SONY_TRV_DIR:sony trv
 VOICE_RECORDINGS:$VOICE_RECORDINGS_DIR:voice recordings
+SCREEN_RECORDINGS:$SCREEN_RECORDINGS_DIR:screen recordings
 "
 
 DRY_RUN="${DRY_RUN:-0}"
